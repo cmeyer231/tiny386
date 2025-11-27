@@ -241,13 +241,6 @@ static void hid_host_mouse_report_callback(const uint8_t *const data, const int 
     if (buttons_raw & 0x04)
         buttons |= 4;
 
-    // DEBUG PRINT if movement noticeable
-    if (dx > 5 || dx < -5 || dy > 5 || dy < -5)
-    {
-        printf("HID MOUSE: raw=%02X dx=%d dy=%d buttons=%02X\n",
-               buttons_raw, dx, dy, buttons_raw);
-        fflush(stdout);
-    }
     ps2_mouse_event(globals.mouse, dx, dy, 0, buttons);
 }
 

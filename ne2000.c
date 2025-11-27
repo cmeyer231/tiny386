@@ -43,6 +43,11 @@
 #else
 #include "esp_mac.h"
 #include "esp_private/wifi.h"
+#include "esp_wifi.h"               // esp_wifi_get_mode, wifi_mode_t
+#include "esp_system.h"
+#include "esp_err.h"                // esp_err_to_name
+#include "esp_log.h"
+#include "esp_private/wifi.h"       // esp_wifi_internal_tx (private API!)
 #endif
 
 void *bigmalloc(size_t size);
@@ -470,7 +475,21 @@ static void *net_open(NE2000State *s)
 static void qemu_send_packet(void *vc, uint8_t *buf, int size)
 {
 #ifdef BUILD_ESP32
-    esp_wifi_internal_tx(ESP_IF_WIFI_STA, buf, size);
+    //esp_wifi_internal_tx(ESP_IF_WIFI_STA, buf, size);
+        wifi_mode_t mode = WIFI_MODE_NULL;
+
+    if (esp_wifi_get_mode(&mode) != ESP_OK) {
+        return;
+    }
+
+    if (mode == WIFI_MODE_NULL) {
+        return;
+    }
+
+    esp_err_t err = esp_wifi_internal_tx(ESP_IF_WIFI_STA, buf, size);
+    if (err != ESP_OK) {
+        ESP_LOGW("ne2000", "wifi tx failed: %s", esp_err_to_name(err));
+    }
 #else
     fprintf(stderr, "recv packet %d bytes:\n", size);
     for (int i = 0; i < size; i++) {
